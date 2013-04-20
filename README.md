@@ -1,6 +1,14 @@
 idrac-kvm.rb
 ============
 
+Important Note
+--------------
+
+Sorry folks - I haven't had much time recently to improve this script, and I think that it's become non-functional (at least the parts that depend on the old slop gem). If someone wants to take this over, feel free. - Jason Gill
+
+Overview
+--------
+
 This script makes it easy to access the Dell iDRAC KVM from the command line, without having to open a browser.
 
 Requires the rest-client, net-ssh-gateway, and slop gems. Install with:
