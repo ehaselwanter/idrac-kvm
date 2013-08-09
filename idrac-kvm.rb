@@ -31,11 +31,11 @@ begin
       puts help
       exit
     end
-    on :b, :bounce, "Bounce server (optional)", :required => false, :optional => false
-    on :l, :login, "Your username on bounce server (optional; defaults to #{ENV['USER']})", :default => ENV['USER'], :required => false, :optional => false
-    on :s, :server, "Remote server IP (required)", :required => true, :optional => false
-    on :u, :user, "Remote username (optional; defaults to root)", :default => "root", :required => false
-    on :p, :password, "Remote password (required)", :required => true, :optional => false
+    on :b, :bounce=, "Bounce server (optional)", :required => false, :optional => false
+    on :l, :login=, "Your username on bounce server (optional; defaults to #{ENV['USER']})", :default => ENV['USER'], :required => false, :optional => false
+    on :s, :server=, "Remote server IP (required)", :required => true, :optional => false
+    on :u, :user=, "Remote username (optional; defaults to root)", :default => "root", :required => false
+    on :p, :password=, "Remote password (required)", :required => true, :optional => false
   end
 
   bounceServer, bouncePort = opts[:bounce].split(':')
