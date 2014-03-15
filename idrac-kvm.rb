@@ -102,6 +102,7 @@ begin
   sessionfiledata.gsub!(/port=#{kvmport_from_sessionfile}/, "port=#{serverPortVNC}")
   sessionfiledata.gsub!(/#{serverDomain}:443/, "#{serverDomain}:#{serverPortHTTPS}")
   sessionfiledata.gsub!(/http:\/\/#{serverDomain}:80/, "https://#{serverDomain}:#{serverPortHTTPS}")
+  sessionfiledata.gsub!(/1.6/, "1.6+")
   jnlpfile.write(sessionfiledata)
   jnlpfile.close
 
