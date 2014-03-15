@@ -100,6 +100,8 @@ begin
   gateway.open(remoteIP, kvmport_from_sessionfile, serverPortVNC)
 
   sessionfiledata.gsub!(/port=#{kvmport_from_sessionfile}/, "port=#{serverPortVNC}")
+  sessionfiledata.gsub!(/#{serverDomain}:443/, "#{serverDomain}:#{serverPortHTTPS}")
+  sessionfiledata.gsub!(/http:\/\/#{serverDomain}:80/, "https://#{serverDomain}:#{serverPortHTTPS}")
   jnlpfile.write(sessionfiledata)
   jnlpfile.close
 
