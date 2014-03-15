@@ -104,7 +104,10 @@ begin
   jnlpfile.close
 
   cyantext "Starting Java viewer with tempfile #{jnlpfile.path}"
-  system("javaws", "-headless", jnlpfile.path)
+  #system("javaws", "-headless", jnlpfile.path)
+  system("javaws", jnlpfile.path)
+  #system("/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Commands/javaws", jnlpfile.path)
+  sleep 60
 
 rescue Errno::ECONNREFUSED => error
   redtext "Error when attempting to open SSH tunnel: #{error.to_s}"
