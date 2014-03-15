@@ -63,10 +63,12 @@ begin
     serverPortHTTPS = 1443
     serverPortVNC = 15900
     serverDomain = "localhost"
-    cyantext "Creating SSH tunnel via #{bounceUser}@#{bounceServer}:#{bouncePort} for ports 443 and 5900"
-    gateway = Net::SSH::Gateway.new(bounceServer, bounceUser, :port => bouncePort)
+    cyantext "Creating SSH tunnel via #{bounceUser}@#{bounceServer}:#{bouncePort} for port 443"
+    gateway = Net::SSH::Gateway.new(bounceServer, bounceUser, :port => bouncePort, :password =>
+                                   'dell')
     gateway.open(remoteIP, 443, 1443)
-    gateway.open(remoteIP, 5900, 15900)
+    gateway.open(remoteIP, 80, 8088)
+
   end
 
   serverURL = "https://#{serverDomain}:#{serverPortHTTPS}"
@@ -92,9 +94,12 @@ begin
   )
 
   sessionfiledata = viewersession.to_s
-  sessionfiledata.gsub!(/port=5900/, "port=#{serverPortVNC}")
-  sessionfiledata.gsub!(/#{serverDomain}:443/, "#{serverDomain}:#{serverPortHTTPS}")
 
+  kvmport_from_sessionfile = sessionfiledata.scan(/kmport=(\d\d\d\d)/).first.last
+  cyantext "Creating SSH tunnel via #{bounceUser}@#{bounceServer}:#{bouncePort} for port #{kvmport_from_sessionfile}"
+  gateway.open(remoteIP, kvmport_from_sessionfile, serverPortVNC)
+
+  sessionfiledata.gsub!(/port=#{kvmport_from_sessionfile}/, "port=#{serverPortVNC}")
   jnlpfile.write(sessionfiledata)
   jnlpfile.close
 
