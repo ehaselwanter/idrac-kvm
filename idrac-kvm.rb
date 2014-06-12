@@ -61,7 +61,7 @@ begin
 
   if bounceServer && bounceUser
     serverPortHTTPS = 1443
-    serverPortVNC = 15900
+    serverPortVNC = 2068
     serverDomain = "localhost"
     cyantext "Creating SSH tunnel via #{bounceUser}@#{bounceServer}:#{bouncePort} for port 443"
     gateway = Net::SSH::Gateway.new(bounceServer, bounceUser, :port => bouncePort, :password =>
@@ -79,38 +79,46 @@ begin
   {:user => remoteUser, :password => remotePassword}
   )
   cookie = loginsession.cookies["_appwebSessionId_"].to_s
+  require 'pp'
+  pp loginsession.cookies
 
   cyantext "Logging in to #{serverURL} with session ID #{cookie}"
   redirectsession = RestClient.get(
   serverURL + '/index.html',
   {:cookies => {:_appwebSessionId_ => cookie}}
   )
-
+  st1 = redirectsession.to_s.match(/CSRF_TOKEN_1.*? \+ "(\w*?)";/)[1]
   jnlpfile = Tempfile.new('idrac.jnlp')
   cyantext "Receiving KVM viewer JNLP file and writing to #{jnlpfile.path}"
   viewersession = RestClient.get(
-  serverURL + '/viewer.jnlp(localhost@0@' + remoteIP + '@' + Time.now.to_i.to_s + ')',
+  serverURL + '/viewer.jnlp(localhost@0@' + remoteIP + '@' + Time.now.to_i.to_s + ")?ST1=#{st1}",
   {:cookies => {:_appwebSessionId_ => cookie}}
   )
 
   sessionfiledata = viewersession.to_s
 
   kvmport_from_sessionfile = sessionfiledata.scan(/kmport=(\d\d\d\d)/).first.last
-  cyantext "Creating SSH tunnel via #{bounceUser}@#{bounceServer}:#{bouncePort} for port #{kvmport_from_sessionfile}"
+  cyantext "Creating SSH tunnel via #{bounceUser}@#{bounceServer}:#{bouncePort} from remote port #{kvmport_from_sessionfile} to local port #{serverPortVNC}"
   gateway.open(remoteIP, kvmport_from_sessionfile, serverPortVNC)
 
+  cyantext "setting port=#{kvmport_from_sessionfile} to port=#{serverPortVNC}"
   sessionfiledata.gsub!(/port=#{kvmport_from_sessionfile}/, "port=#{serverPortVNC}")
+  cyantext "setting #{serverDomain}:443 to #{serverDomain}:#{serverPortHTTPS}"
   sessionfiledata.gsub!(/#{serverDomain}:443/, "#{serverDomain}:#{serverPortHTTPS}")
-  sessionfiledata.gsub!(/http:\/\/#{serverDomain}:80/, "https://#{serverDomain}:#{serverPortHTTPS}")
+  # cyantext "setting http://#{serverDomain}:80 to https://#{serverDomain}:#{serverPortHTTPS}"
+  # sessionfiledata.gsub!(/http:\/\/#{serverDomain}:80/, "https://#{serverDomain}:#{serverPortHTTPS}")
+  cyantext "setting http://#{serverDomain}:80 to http://#{serverDomain}:#{8088}"
+  sessionfiledata.gsub!(/http:\/\/#{serverDomain}:80/, "http://#{serverDomain}:8088")
   sessionfiledata.gsub!(/1.6/, "1.6+")
   #sessionfiledata.gsub!(/Mac/, "Maccccc")
+  puts sessionfiledata
   jnlpfile.write(sessionfiledata)
   jnlpfile.close
 
   cyantext "Starting Java viewer with tempfile #{jnlpfile.path}"
-  #system("javaws", "-headless", jnlpfile.path)
-  system("javaws", jnlpfile.path)
-  #system("/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Commands/javaws", jnlpfile.path)
+  # system("javaws", "-headless", jnlpfile.path)
+  puts system('javaws', jnlpfile.path)
+  #puts system("/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Commands/javaws", jnlpfile.path)
   sleep 60
 
 rescue Errno::ECONNREFUSED => error
